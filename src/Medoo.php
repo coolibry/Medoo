@@ -561,15 +561,19 @@ class Medoo
 					throw new InvalidArgumentException('Cannot use table.* to select all columns while joining table');
 				}
 
-				preg_match('/(?<column>[a-zA-Z0-9_\.]+)(?:\s*\((?<alias>[a-zA-Z0-9_]+)\))?(?:\s*\[(?<type>(?:String|Bool|Int|Number|Object|JSON))\])?/i', $value, $match);
+				preg_match('/(?<column>[a-zA-Z0-9_\.]+)(?:\s*\((?<alias>[a-zA-Z0-9_]+)\))?(?:\s*\[(?<type>(?:String|Bool|Int|Number|Object|JSON|GROUP_CONCAT))\])?/i', $value, $match);
 
 				if (!empty($match[ 'alias' ]))
 				{
-					$stack[] = $this->columnQuote($match[ 'column' ]) . ' AS ' . $this->columnQuote($match[ 'alias' ]);
-
+					if ($match[ 'type' ]=='GROUP_CONCAT'){
+						$stack[] = $match[ 'type' ].'('.$this->columnQuote($match[ 'column' ]).')' . ' AS ' . $this->columnQuote($match[ 'alias' ]);
+					}
+					else{
+						$stack[] = $this->columnQuote($match[ 'column' ]) . ' AS ' . $this->columnQuote($match[ 'alias' ]);
+					}
 					$columns[ $key ] = $match[ 'alias' ];
 
-					if (!empty($match[ 'type' ]))
+					if (!empty($match[ 'type' ]) && !$match[ 'type' ] == 'GROUP_CONCAT')
 					{
 						$columns[ $key ] .= ' [' . $match[ 'type' ] . ']';
 					}
